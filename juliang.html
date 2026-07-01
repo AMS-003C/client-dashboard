@@ -2216,12 +2216,26 @@ loadData();
     var ctrl = body.querySelector('.bar-chart-head .ctrl');
     if (ctrl) ctrl.remove();
   }
+  // 去掉两处"大盘"字样（区标题 "大盘整体概览" → "整体概览"；卡片头 "大盘核心指标" → "核心指标"）
+  function stripDapan(){
+    var st = document.querySelector('.section-title .lhs h2');
+    if (st) st.textContent = (st.textContent || '').replace('大盘', '');
+    var ov = document.querySelector('#overviewWrap h2');
+    if (ov) {
+      Array.prototype.forEach.call(ov.childNodes, function(n){
+        if (n.nodeType === 3 && n.textContent.indexOf('大盘') >= 0) {
+          n.textContent = n.textContent.replace('大盘', '');
+        }
+      });
+    }
+  }
   // renderOverview 每次重渲后都要再裁剪 → 包裹原函数
   function hookRender(){
     if (typeof window.renderOverview !== 'function') return setTimeout(hookRender, 30);
     var orig = window.renderOverview;
-    window.renderOverview = function(){ orig.apply(this, arguments); pruneOverview(); };
+    window.renderOverview = function(){ orig.apply(this, arguments); pruneOverview(); stripDapan(); };
     window.renderOverview();
+    stripDapan();
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', hookRender);
