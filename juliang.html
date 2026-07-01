@@ -2181,39 +2181,41 @@ loadData();
 </script>
 
 <style>
-/* 客户版：大盘区标题精简 */
-.section-title .lhs h2 { }
+/* 客户版：隐藏"分销售概览"标题及其后的 sales-grid */
+#overviewBody .sales-grid { display:none !important; }
 </style>
 <script>
-// 客户小看板：精简大盘概览，只保留近 7 日三阶段变化趋势图
+// 客户小看板：删除「客户阶段分布」堆叠条 + 「分销售概览」，保留 KPI 卡与趋势图
 (function(){
-  function applyClientOverview(){
-    if (typeof renderOverview !== 'function' || typeof renderStackedBarChart !== 'function') {
-      return setTimeout(applyClientOverview, 30);
-    }
-    // 覆盖大盘区标题文案
-    var st = document.querySelector('.section-title .lhs h2');
-    if (st) st.textContent = '整体趋势';
-    var desc = document.querySelector('.section-title .lhs .desc');
-    if (desc) desc.textContent = '近 7 日三阶段直播间数变化';
-    // 覆盖 overview 卡片头标题
-    var ov = document.querySelector('#overviewWrap h2');
-    if (ov) ov.innerHTML = '\uD83D\uDCC8 整体趋势 <span class="meta" id="overviewMeta"></span>';
-
-    // 重写 renderOverview：仅渲染趋势柱状图
-    window.renderOverview = function(){
-      var body = document.getElementById('overviewBody');
-      if (!body || typeof DATA === 'undefined' || !DATA.rooms) return;
-      body.innerHTML = renderStackedBarChart();
-      var barSel = body.querySelector('#barScopeSelect');
-      if (barSel) barSel.onchange = function(){ BAR_SCOPE = barSel.value; window.renderOverview(); };
-    };
+  function pruneOverview(){
+    var body = document.getElementById('overviewBody');
+    if (!body) return setTimeout(pruneOverview, 30);
+    // 遍历 sub-section-title，删掉"客户阶段分布"和"分销售概览"两个小标题及其内容块
+    body.querySelectorAll('.sub-section-title').forEach(function(t){
+      var txt = t.textContent || '';
+      if (txt.indexOf('客户阶段分布') >= 0) {
+        // 该标题外层包裹 div（含堆叠条+图例）整块删除
+        var wrap = t.parentElement;
+        if (wrap) wrap.remove(); else t.remove();
+      } else if (txt.indexOf('分销售概览') >= 0) {
+        // 标题 + 紧随的 sales-grid 都删掉
+        var next = t.nextElementSibling;
+        if (next && next.classList.contains('sales-grid')) next.remove();
+        t.remove();
+      }
+    });
+  }
+  // renderOverview 每次重渲后都要再裁剪 → 包裹原函数
+  function hookRender(){
+    if (typeof window.renderOverview !== 'function') return setTimeout(hookRender, 30);
+    var orig = window.renderOverview;
+    window.renderOverview = function(){ orig.apply(this, arguments); pruneOverview(); };
     window.renderOverview();
   }
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyClientOverview);
+    document.addEventListener('DOMContentLoaded', hookRender);
   } else {
-    applyClientOverview();
+    hookRender();
   }
 })();
 </script>
