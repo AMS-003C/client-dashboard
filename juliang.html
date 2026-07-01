@@ -2183,9 +2183,11 @@ loadData();
 <style>
 /* 客户版：隐藏"分销售概览"标题及其后的 sales-grid */
 #overviewBody .sales-grid { display:none !important; }
+/* 客户版：隐藏趋势图右上角"可筛选具体销售"下拉筛选器 */
+#overviewBody .bar-chart-head .ctrl { display:none !important; }
 </style>
 <script>
-// 客户小看板：删除「客户阶段分布」堆叠条 + 「分销售概览」，保留 KPI 卡与趋势图
+// 客户小看板：删除「客户阶段分布」堆叠条 + 「分销售概览」+ 趋势图筛选器，保留 KPI 卡与趋势图
 (function(){
   function pruneOverview(){
     var body = document.getElementById('overviewBody');
@@ -2204,6 +2206,15 @@ loadData();
         t.remove();
       }
     });
+    // 删掉趋势图标题里的"· 大盘整体"后缀 span（title 内第一个 span）
+    var barTitle = body.querySelector('.bar-chart-head .title');
+    if (barTitle) {
+      var sp = barTitle.querySelector('span');
+      if (sp) sp.remove();
+    }
+    // 删掉筛选下拉（兜底，配合 CSS）
+    var ctrl = body.querySelector('.bar-chart-head .ctrl');
+    if (ctrl) ctrl.remove();
   }
   // renderOverview 每次重渲后都要再裁剪 → 包裹原函数
   function hookRender(){
