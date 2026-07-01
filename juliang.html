@@ -2179,5 +2179,43 @@ function afterLoad() {
 }
 loadData();
 </script>
+
+<style>
+/* 客户版：大盘区标题精简 */
+.section-title .lhs h2 { }
+</style>
+<script>
+// 客户小看板：精简大盘概览，只保留近 7 日三阶段变化趋势图
+(function(){
+  function applyClientOverview(){
+    if (typeof renderOverview !== 'function' || typeof renderStackedBarChart !== 'function') {
+      return setTimeout(applyClientOverview, 30);
+    }
+    // 覆盖大盘区标题文案
+    var st = document.querySelector('.section-title .lhs h2');
+    if (st) st.textContent = '整体趋势';
+    var desc = document.querySelector('.section-title .lhs .desc');
+    if (desc) desc.textContent = '近 7 日三阶段直播间数变化';
+    // 覆盖 overview 卡片头标题
+    var ov = document.querySelector('#overviewWrap h2');
+    if (ov) ov.innerHTML = '\uD83D\uDCC8 整体趋势 <span class="meta" id="overviewMeta"></span>';
+
+    // 重写 renderOverview：仅渲染趋势柱状图
+    window.renderOverview = function(){
+      var body = document.getElementById('overviewBody');
+      if (!body || typeof DATA === 'undefined' || !DATA.rooms) return;
+      body.innerHTML = renderStackedBarChart();
+      var barSel = body.querySelector('#barScopeSelect');
+      if (barSel) barSel.onchange = function(){ BAR_SCOPE = barSel.value; window.renderOverview(); };
+    };
+    window.renderOverview();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyClientOverview);
+  } else {
+    applyClientOverview();
+  }
+})();
+</script>
 </body>
 </html>
